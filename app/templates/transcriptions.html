@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Transcripciones Guardadas</h1>
+
+<ul>
+{% for file in files %}
+    <li><a href="#" onclick="showTranscription('{{ file }}'); return false;">{{ file }}</a></li>
+{% endfor %}
+</ul>
+
+<div id="transcription-content"></div>
+
+<a href="{{ url_for('main.index') }}">Volver a la página principal</a>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %}

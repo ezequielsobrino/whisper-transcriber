@@ -1,3 +1,7 @@
+# IDE
+.idea/
+.vscode/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -18,6 +22,11 @@ instance/
 # Temporary files
 *.mp3
 audio.*
+# Ignore everything in the transcriptions folder
+transcriptions/*
+
+# But don't ignore the transcriptions folder itself
+!transcriptions/.gitkeep
 
 # OS generated files
 .DS_Store

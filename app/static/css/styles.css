@@ -1,0 +1,111 @@
+/* Estilos generales */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2 {
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+
+/* Enlaces */
+a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Botones */
+button, .button {
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover, .button:hover {
+    background-color: #2980b9;
+}
+
+/* Formularios */
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+/* Secciones de estado y resultado */
+#status, #result, #transcription-content {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #ecf0f1;
+    border-radius: 3px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+/* Contenido de la transcripción */
+#result pre, #transcription-content pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+    padding: 10px;
+    border: 1px solid #e9ecef;
+    border-radius: 3px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Información del archivo guardado */
+#result p, #transcription-content p {
+    word-break: break-all;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+/* Lista de transcripciones */
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    margin-bottom: 10px;
+}
+
+/* Responsividad */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 15px;
+    }
+}

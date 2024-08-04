@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Transcriptor de YouTube</h1>
+
+<form id="transcription-form" onsubmit="transcribeVideo(); return false;">
+    <input type="text" id="youtube-url" placeholder="Ingrese la URL del video de YouTube" required>
+    <button type="submit">Transcribir</button>
+</form>
+
+<div id="status"></div>
+
+<div id="result"></div>
+
+<p><a href="{{ url_for('transcription.list_files') }}">Ver transcripciones guardadas</a></p>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %}
