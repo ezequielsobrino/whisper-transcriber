@@ -1,17 +1,31 @@
 {% extends "base.html" %}
 {% block content %}
+
 <h1>Transcriptor de YouTube</h1>
 
-<form id="transcription-form" onsubmit="transcribeVideo(); return false;">
-    <input type="text" id="youtube-url" placeholder="Ingrese la URL del video de YouTube" required>
-    <button type="submit">Transcribir</button>
+<form id="transcription-form">
+    <input type="text" id="youtube-url" placeholder="Ingrese la URL de YouTube" required>
+    
+    <select id="model-type">
+        <option value="tiny">Tiny</option>
+        <option value="base" selected>Base</option>
+        <option value="small">Small</option>
+        <option value="medium">Medium</option>
+        <option value="large">Large</option>
+    </select>
+    
+    <label>
+        <input type="checkbox" id="english-only"> English Only
+    </label>
+    
+    <button type="submit" id="transcribe-button">Transcribir</button>
 </form>
 
 <div id="status"></div>
 <div id="elapsed-time"></div>
 <div id="result"></div>
 
-<p><a href="{{ url_for('transcription.list_files') }}">Ver transcripciones guardadas</a></p>
+<a href="{{ url_for('transcription.list_files') }}">Ver transcripciones guardadas</a>
 
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 {% endblock %}

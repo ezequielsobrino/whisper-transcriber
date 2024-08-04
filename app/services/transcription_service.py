@@ -7,20 +7,39 @@ from flask import current_app, jsonify
 
 logger = logging.getLogger(__name__)
 
-# Cargar el modelo de Whisper
-logger.info("Cargando el modelo de Whisper...")
-model = whisper.load_model("base")
-logger.info("Modelo de Whisper cargado exitosamente.")
+# Definir los modelos disponibles
+AVAILABLE_MODELS = {
+    "tiny": ["tiny", "tiny.en"],
+    "base": ["base", "base.en"],
+    "small": ["small", "small.en"],
+    "medium": ["medium", "medium.en"],
+    "large": ["large"]
+}
 
+def load_whisper_model(model_name):
+    logger.info(f"Cargando el modelo de Whisper: {model_name}")
+    model = whisper.load_model(model_name)
+    logger.info(f"Modelo de Whisper {model_name} cargado exitosamente.")
+    return model
 
 def sanitize_filename(filename):
     return re.sub(r'[^\w\-_\. ]', '_', filename)
 
-
-def transcribe_video(url, model_type='base'):
-    logger.info(f"Iniciando transcripción para URL: {url} con modelo: {model_type}")
+def transcribe_video(url, model_type='base', english_only=False):
+    logger.info(f"Iniciando transcripción para URL: {url} con modelo: {model_type}, English only: {english_only}")
 
     try:
+        # Seleccionar el modelo correcto
+        if english_only and model_type != "large":
+            model_name = f"{model_type}.en"
+        else:
+            model_name = model_type
+
+        if model_name not in [m for models in AVAILABLE_MODELS.values() for m in models]:
+            raise ValueError(f"Modelo no válido: {model_name}")
+
+        model = load_whisper_model(model_name)
+
         # Configurar yt-dlp
         ydl_opts = {
             'format': 'bestaudio/best',
@@ -67,7 +86,7 @@ def transcribe_video(url, model_type='base'):
 
         # Sanitizar el nombre del video para usarlo como nombre de archivo
         safe_filename = sanitize_filename(video_title)
-        transcription_file = os.path.join(transcriptions_folder, f"{safe_filename}.txt")
+        transcription_file = os.path.join(transcriptions_folder, f"{safe_filename}_{model_name}.txt")
 
         # Guardar la transcripción en un archivo
         with open(transcription_file, 'w', encoding='utf-8') as f:
@@ -82,7 +101,6 @@ def transcribe_video(url, model_type='base'):
     except Exception as e:
         logger.exception(f"Error durante la transcripción: {str(e)}")
         return jsonify({'error': str(e), 'status': 'error'}), 500
-
 
 def get_transcription_files():
     transcriptions_folder = current_app.config['TRANSCRIPTIONS_FOLDER']

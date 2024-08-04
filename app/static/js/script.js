@@ -1,11 +1,18 @@
 let startTime;
 let timerInterval;
 
-function transcribeVideo() {
+function transcribeVideo(event) {
+    event.preventDefault();
+    console.log("Función transcribeVideo llamada");
+    
     const url = document.getElementById('youtube-url').value;
+    const modelType = document.getElementById('model-type').value;
+    const englishOnly = document.getElementById('english-only').checked;
     const resultDiv = document.getElementById('result');
     const statusDiv = document.getElementById('status');
     const elapsedTimeDiv = document.getElementById('elapsed-time');
+
+    console.log(`URL: ${url}, Model: ${modelType}, English Only: ${englishOnly}`);
 
     statusDiv.innerHTML = 'Iniciando transcripción...';
     resultDiv.innerHTML = '';
@@ -15,20 +22,27 @@ function transcribeVideo() {
     updateElapsedTime();
     timerInterval = setInterval(updateElapsedTime, 1000);
 
+    console.log("Enviando solicitud fetch");
     fetch('/transcription/transcribe', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({url: url}),
+        body: JSON.stringify({
+            url: url,
+            model_type: modelType,
+            english_only: englishOnly
+        }),
     })
     .then(response => {
+        console.log("Respuesta recibida", response);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            return response.json().then(err => { throw err; });
         }
         return response.json();
     })
     .then(data => {
+        console.log("Datos recibidos", data);
         clearInterval(timerInterval);
         if (data.status === 'success') {
             const endTime = new Date();
@@ -41,15 +55,15 @@ function transcribeVideo() {
                 <p><strong>Archivo guardado como:</strong><br>${data.file}</p>
             `;
         } else {
-            throw new Error(data.error || data.message || 'Error desconocido en la transcripción');
+            throw new Error(data.error || 'Error desconocido en la transcripción');
         }
     })
     .catch((error) => {
-        clearInterval(timerInterval);
         console.error('Error:', error);
+        clearInterval(timerInterval);
         statusDiv.innerHTML = 'Error en la transcripción.';
         elapsedTimeDiv.innerHTML = '';
-        resultDiv.innerHTML = `<p>Ocurrió un error durante la transcripción: ${error.message}</p>`;
+        resultDiv.innerHTML = `<p>Ocurrió un error durante la transcripción: ${error.message || error}</p>`;
     });
 }
 
@@ -94,3 +108,24 @@ function showTranscription(filename) {
             document.getElementById('transcription-content').innerHTML = `<p>Error al cargar la transcripción: ${error.message}</p>`;
         });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM cargado");
+    const form = document.getElementById('transcription-form');
+    const button = document.getElementById('transcribe-button');
+    if (form) {
+        form.addEventListener('submit', transcribeVideo);
+        console.log("Listener de envío de formulario agregado");
+    } else {
+        console.error("Formulario no encontrado");
+    }
+    if (button) {
+        button.addEventListener('click', function(event) {
+            console.log("Botón de transcripción clickeado");
+            transcribeVideo(event);
+        });
+        console.log("Listener de clic de botón agregado");
+    } else {
+        console.error("Botón de transcripción no encontrado");
+    }
+});
