@@ -86,27 +86,30 @@ function padZero(num) {
 
 function showTranscription(filename) {
     fetch(`/transcription/content/${filename}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            if (data.content) {
-                document.getElementById('transcription-content').innerHTML = `
-                    <h2>Transcripción: ${filename}</h2>
-                    <pre>${data.content}</pre>
-                    <p><strong>Archivo:</strong><br>${filename}</p>
-                `;
-            } else {
-                throw new Error('No content received from server');
-            }
+            document.getElementById('video-title').textContent = data.video_info.title;
+            document.getElementById('video-channel').textContent = data.video_info.channel;
+            document.getElementById('video-url').href = data.video_info.url;
+            document.getElementById('video-url').textContent = data.video_info.url;
+            document.getElementById('video-description').textContent = data.video_info.description;
+            document.getElementById('transcription-content').textContent = data.content;
+
+            // Crear el embed del video de YouTube
+            const videoId = getYouTubeVideoId(data.video_info.url);
+            const embedHtml = `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+            document.getElementById('video-embed').innerHTML = embedHtml;
+
+            // Mostrar los detalles del video
+            document.getElementById('video-details').style.display = 'block';
         })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('transcription-content').innerHTML = `<p>Error al cargar la transcripción: ${error.message}</p>`;
-        });
+        .catch(error => console.error('Error:', error));
+}
+
+function getYouTubeVideoId(url) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
 }
 
 document.addEventListener('DOMContentLoaded', function() {

@@ -1,16 +1,34 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Transcripciones Guardadas</h1>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Columna izquierda: Lista de transcripciones -->
+        <div class="col-md-3 sidebar">
+            <h2>Transcripciones Guardadas</h2>
+            <ul class="list-group">
+                {% for file in files %}
+                    <li class="list-group-item">
+                        <a href="#" onclick="showTranscription('{{ file }}'); return false;">{{ file }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
 
-<ul>
-{% for file in files %}
-    <li><a href="#" onclick="showTranscription('{{ file }}'); return false;">{{ file }}</a></li>
-{% endfor %}
-</ul>
-
-<div id="transcription-content"></div>
-
-<a href="{{ url_for('main.index') }}">Volver a la página principal</a>
+        <!-- Columna derecha: Detalles del video y transcripción -->
+        <div class="col-md-9 main-content">
+            <div id="video-details" style="display: none;">
+                <h2 id="video-title"></h2>
+                <div id="video-embed"></div>
+                <p><strong>Canal:</strong> <span id="video-channel"></span></p>
+                <p><strong>URL:</strong> <a id="video-url" href="#" target="_blank"></a></p>
+                <h3>Descripción</h3>
+                <p id="video-description"></p>
+                <h3>Transcripción</h3>
+                <div id="transcription-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 {% endblock %}

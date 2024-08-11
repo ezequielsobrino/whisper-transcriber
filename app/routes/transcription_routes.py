@@ -1,10 +1,12 @@
 from flask import Blueprint, jsonify, request, current_app, render_template
-from ..services.transcription_service import transcribe_video, get_transcription_files, get_transcription_content, AVAILABLE_MODELS
 import logging
+
+from app.services.transcription_service import VideoTranscriptionService
 
 logger = logging.getLogger(__name__)
 
 bp = Blueprint('transcription', __name__, url_prefix='/transcription')
+service = VideoTranscriptionService()
 
 @bp.route('/transcribe', methods=['POST'])
 def transcribe():
@@ -22,7 +24,7 @@ def transcribe():
     
     logger.info(f"Transcribiendo URL: {url}, Modelo: {model_type}, English Only: {english_only}")
     
-    if model_type not in AVAILABLE_MODELS:
+    if model_type not in service.AVAILABLE_MODELS:
         logger.error(f"Modelo no válido: {model_type}")
         return jsonify({'error': 'Modelo no válido', 'status': 'error'}), 400
     
@@ -30,18 +32,20 @@ def transcribe():
         logger.error("El modelo 'large' no tiene versión 'English only'")
         return jsonify({'error': 'El modelo "large" no tiene versión "English only"', 'status': 'error'}), 400
     
-    return transcribe_video(url, model_type, english_only)
-
+    return service.transcribe_video(url, model_type, english_only)
 
 @bp.route('/files')
 def list_files():
-    files = get_transcription_files()
+    files = service.get_transcription_files()
     return render_template('transcriptions.html', files=files)
 
 @bp.route('/content/<filename>')
 def get_content(filename):
-    content = get_transcription_content(filename)
-    return jsonify({'content': content})
+    content, video_info = service.get_transcription_content(filename)
+    return jsonify({
+        'content': content,
+        'video_info': video_info
+    })
 
 @bp.route('/progress')
 def get_progress():
