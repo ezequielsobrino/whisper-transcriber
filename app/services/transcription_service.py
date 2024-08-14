@@ -6,8 +6,11 @@ import yt_dlp
 import logging
 from flask import current_app, jsonify
 
+from app.config import Config
+from app.services.queue_service import QueueService
+
 class VideoTranscriptionService:
-    def __init__(self):
+    def __init__(self, app=None):
         self.logger = logging.getLogger(__name__)
         self.AVAILABLE_MODELS = {
             "tiny": ["tiny", "tiny.en"],
@@ -16,6 +19,18 @@ class VideoTranscriptionService:
             "medium": ["medium", "medium.en"],
             "large": ["large"]
         }
+        self.app = app
+        self.transcriptions_folder = None
+        if app is not None:
+            self.init_app(app)
+        self.queue_service = QueueService(self)
+
+    def init_app(self, app):
+        self.app = app
+
+    def get_transcriptions_folder(self):
+        config = Config()
+        return config.TRANSCRIPTIONS_FOLDER
 
     def load_whisper_model(self, model_name):
         self.logger.info(f"Cargando el modelo de Whisper: {model_name}")
@@ -81,7 +96,7 @@ class VideoTranscriptionService:
             result = model.transcribe(audio_file, verbose=True)
             self.logger.info("Transcripción completada.")
 
-            transcriptions_folder = current_app.config['TRANSCRIPTIONS_FOLDER']
+            transcriptions_folder = self.get_transcriptions_folder()
             os.makedirs(transcriptions_folder, exist_ok=True)
 
             safe_filename = self.sanitize_filename(video_info['title'])
@@ -99,12 +114,12 @@ class VideoTranscriptionService:
             os.remove(audio_file)
             self.logger.info(f"Archivo de audio temporal eliminado: {audio_file}")
 
-            return jsonify({
+            return {
                 'transcription': result["text"],
                 'status': 'success',
                 'file': transcription_file,
                 'video_info': video_info
-            })
+            }
         except Exception as e:
             self.logger.exception(f"Error durante la transcripción: {str(e)}")
             return jsonify({'error': str(e), 'status': 'error'}), 500

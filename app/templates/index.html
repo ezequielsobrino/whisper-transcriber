@@ -4,8 +4,7 @@
 <h1>Transcriptor de YouTube</h1>
 
 <form id="transcription-form">
-    <input type="text" id="youtube-url" placeholder="Ingrese la URL de YouTube" required>
-    
+    <input type="text" id="youtube-url" placeholder="URL de YouTube" required>
     <select id="model-type">
         <option value="tiny">Tiny</option>
         <option value="base" selected>Base</option>
@@ -13,19 +12,22 @@
         <option value="medium">Medium</option>
         <option value="large">Large</option>
     </select>
-    
     <label>
         <input type="checkbox" id="english-only"> English Only
     </label>
-    
     <button type="submit" id="transcribe-button">Transcribir</button>
 </form>
+
+<button id="show-queue-button">Mostrar Cola</button>
 
 <div id="status"></div>
 <div id="elapsed-time"></div>
 <div id="result"></div>
+<div id="queue"></div>
 
-<a href="{{ url_for('transcription.list_files') }}">Ver transcripciones guardadas</a>
+<p><a href="{{ url_for('transcription.list_files') }}">Ver transcripciones guardadas</a></p>
 
+<!-- Añade esta línea al final del bloque de contenido -->
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
 {% endblock %}

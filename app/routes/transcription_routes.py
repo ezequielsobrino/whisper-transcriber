@@ -8,6 +8,9 @@ logger = logging.getLogger(__name__)
 bp = Blueprint('transcription', __name__, url_prefix='/transcription')
 service = VideoTranscriptionService()
 
+def init_app(app):
+    service.init_app(app)
+
 @bp.route('/transcribe', methods=['POST'])
 def transcribe():
     logger.info("Solicitud de transcripción recibida")
@@ -22,17 +25,27 @@ def transcribe():
     model_type = data.get('model_type', 'base')
     english_only = data.get('english_only', False)
     
-    logger.info(f"Transcribiendo URL: {url}, Modelo: {model_type}, English Only: {english_only}")
+    logger.info(f"Añadiendo a la cola de transcripción - URL: {url}, Modelo: {model_type}, English Only: {english_only}")
     
-    if model_type not in service.AVAILABLE_MODELS:
-        logger.error(f"Modelo no válido: {model_type}")
-        return jsonify({'error': 'Modelo no válido', 'status': 'error'}), 400
-    
-    if english_only and model_type == 'large':
-        logger.error("El modelo 'large' no tiene versión 'English only'")
-        return jsonify({'error': 'El modelo "large" no tiene versión "English only"', 'status': 'error'}), 400
-    
-    return service.transcribe_video(url, model_type, english_only)
+    try:
+        task_id = service.queue_service.add_task(url, model_type, english_only)
+        logger.info(f"Tarea añadida a la cola con ID: {task_id}")
+        return jsonify({'task_id': task_id, 'status': 'queued'})
+    except Exception as e:
+        logger.error(f"Error al añadir la tarea a la cola: {str(e)}")
+        return jsonify({'error': 'Error al procesar la solicitud', 'status': 'error'}), 500
+
+@bp.route('/status/<task_id>')
+def get_status(task_id):
+    status = service.queue_service.get_task_status(task_id)
+    if status:
+        return jsonify(status)
+    return jsonify({'error': 'Tarea no encontrada', 'status': 'error'}), 404
+
+@bp.route('/queue')
+def get_queue():
+    tasks = service.queue_service.get_all_tasks()
+    return jsonify(tasks)
 
 @bp.route('/files')
 def list_files():
