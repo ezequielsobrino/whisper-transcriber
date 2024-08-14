@@ -50,13 +50,13 @@ def get_queue():
 @bp.route('/files')
 def list_files():
     files = service.get_transcription_files()
-    return render_template('transcriptions.html', files=files)
+    return jsonify(files)
 
 @bp.route('/content/<filename>')
 def get_content(filename):
-    content, video_info = service.get_transcription_content(filename)
+    transcription, video_info = service.get_transcription_content(filename)
     return jsonify({
-        'content': content,
+        'transcription': transcription,
         'video_info': video_info
     })
 

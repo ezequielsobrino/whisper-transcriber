@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Transcripción</title>
+    <style>
+         * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f7f7;
+            color: #333;
+            display: flex;
+            height: 100vh;
+        }
+        .left-panel {
+            width: 25%;
+            background-color: #ffffff;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .right-panel {
+            width: 75%;
+            display: flex;
+            flex-direction: column;
+        }
+        .top-right, .bottom-right {
+            padding: 20px;
+            background-color: #ffffff;
+            margin: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        ul {
+            list-style-type: none;
+        }
+        li {
+            padding: 10px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        li:hover {
+            background-color: #f0f0f0;
+        }
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: 500;
+        }
+        .transcription-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .transcription-details h3 {
+            grid-column: 1 / -1;
+            color: #2c3e50;
+            margin-top: 20px;
+        }
+        .transcription-details p {
+            margin: 5px 0;
+        }
+        .transcription-text {
+            grid-column: 1 / -1;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="left-panel">
+        <h2>Transcripciones</h2>
+        <ul id="transcription-list">
+            <!-- La lista de transcripciones se llenará dinámicamente -->
+        </ul>
+    </div>
+    <div class="right-panel">
+        <div class="top-right">
+            <h2>Nueva Transcripción</h2>
+            <input type="text" id="video-url" placeholder="URL del audio o video">
+            <select id="model-type">
+                <option value="base">Tiny</option>
+                <option value="base">Base</option>
+                <option value="small">Small</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
+            </select>
+            <label>
+                <input type="checkbox" id="english-only"> Solo inglés
+            </label>
+            <button onclick="transcribeVideo()">Transcribir</button>
+            <table id="queue-table">
+                <thead>
+                    <tr>
+                        <th>URL</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- La cola de transcripciones se llenará dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+        <div class="bottom-right">
+            <h2>Transcripción Seleccionada</h2>
+            <div class="transcription-details" id="transcription-details">
+                <!-- Los detalles de la transcripción se llenarán dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function transcribeVideo() {
+            const url = document.getElementById('video-url').value;
+            const modelType = document.getElementById('model-type').value;
+            const englishOnly = document.getElementById('english-only').checked;
+
+            fetch('/transcription/transcribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url, model_type: modelType, english_only: englishOnly }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'queued') {
+                    alert('Transcripción en cola. ID de tarea: ' + data.task_id);
+                    updateQueue();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al enviar la solicitud');
+            });
+        }
+
+        function updateQueue() {
+            fetch('/transcription/queue')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.querySelector('#queue-table tbody');
+                tbody.innerHTML = '';
+                for (const [taskId, task] of Object.entries(data)) {
+                    const row = tbody.insertRow();
+                    row.insertCell(0).textContent = task.url;
+                    row.insertCell(1).textContent = task.status;
+                }
+            })
+            .catch(error => console.error('Error al actualizar la cola:', error));
+        }
+
+        function updateTranscriptionList() {
+            fetch('/transcription/files')
+            .then(response => response.json())
+            .then(files => {
+                const list = document.getElementById('transcription-list');
+                list.innerHTML = '';
+                files.forEach(file => {
+                    const li = document.createElement('li');
+                    li.textContent = file.replace('.json', '');
+                    li.onclick = () => loadTranscriptionContent(file);
+                    list.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Error al cargar la lista de transcripciones:', error));
+        }
+
+        function loadTranscriptionContent(filename) {
+            fetch(`/transcription/content/${filename}`)
+            .then(response => response.json())
+            .then(data => {
+                const details = document.getElementById('transcription-details');
+                details.innerHTML = `
+                    <h3>Detalles del Video</h3>
+                    <p><strong>Título:</strong> ${data.video_info.title}</p>
+                    <p><strong>Canal:</strong> ${data.video_info.channel}</p>
+                    <p><strong>URL:</strong> <a href="${data.video_info.url}" target="_blank">${data.video_info.url}</a></p>
+                    <p><strong>Modelo:</strong> ${data.video_info.model}</p>
+                    <p><strong>Solo inglés:</strong> ${data.video_info.english_only ? 'Sí' : 'No'}</p>
+                    <h3>Descripción</h3>
+                    <p>${data.video_info.description}</p>
+                    <h3>Transcripción</h3>
+                    <div class="transcription-text">${data.transcription}</div>
+                `;
+            })
+            .catch(error => console.error('Error al cargar el contenido de la transcripción:', error));
+        }
+
+
+        // Actualizar la cola y la lista de transcripciones cada 5 segundos
+        setInterval(() => {
+            updateQueue();
+            updateTranscriptionList();
+        }, 5000);
+
+        // Cargar datos iniciales
+        updateQueue();
+        updateTranscriptionList();
+    </script>
+</body>
+</html>

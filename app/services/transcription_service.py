@@ -81,7 +81,9 @@ class VideoTranscriptionService:
                         'title': info['title'],
                         'channel': info['channel'],
                         'url': url,
-                        'description': info.get('description', 'No hay descripción disponible')
+                        'description': info.get('description', 'No hay descripción disponible'),
+                        'model': model_name,
+                        'english_only': english_only
                     }
                 except yt_dlp.DownloadError as e:
                     self.logger.error(f"Error al descargar: {str(e)}")
@@ -122,7 +124,7 @@ class VideoTranscriptionService:
             }
         except Exception as e:
             self.logger.exception(f"Error durante la transcripción: {str(e)}")
-            return jsonify({'error': str(e), 'status': 'error'}), 500
+            return jsonify({'error': str(e), 'status': 'error'}), 500  
 
     def get_transcription_files(self):
         transcriptions_folder = current_app.config['TRANSCRIPTIONS_FOLDER']
